@@ -29,6 +29,13 @@ npm install
 ```
 This will install all of laravel mix requirement as the project uses laravel-mix and Vue.js 
 
+## Setting bucket information
+To set your bucket slug simply run
+```
+php artisan bucket bucket-slug read-key write-key
+```
+Bothe the read and write keys are optional
+
 ### Optional
 To start up a server for the app run `php artisan serve` and navigate to 127.0.0.1:8000 in your browser
 
