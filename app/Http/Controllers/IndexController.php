@@ -19,19 +19,26 @@ class IndexController extends Controller {
         $this->bucket_slug = config('cosmic.slug');
         $this->read_key = config('cosmic.read');
         $this->write_key = config('cosmic.write');
-        $this->locations_cosmic = new CosmicJS($this->bucket_slug, 'locations', $this->read_key, $this->write_key);
+        $this->locations_cosmic = new CosmicJS($this->bucket_slug, 'locations');
         $this->items_cosmic = new CosmicJS($this->bucket_slug, 'items', $this->read_key, $this->write_key);
     }
 
     public function index($location = null) {
-        return $this->bucket_slug;
+
         //get objects with cosmic-js php
-        $locations = $this->locations_cosmic->getObjectsType("locations", "disney-land");
+        $locations = $this->locations_cosmic->getObjectsType();
 
         //set locations and bucket_slug variable to be passed to view
-        $data['locations'] = $locations->objects;
+        if (property_exists($locations, 'objects')) {
+            $data['locations'] = $locations->objects;
+        }
+        else
+        {
+            $data['locations'] = [];
+        }
+
         $data['bucket_slug'] = $this->bucket_slug;
-        
+
         //if location slug was passed in url, pass it to view as well
         if ($location) {
             $data['location_slug'] = $location;
@@ -90,7 +97,7 @@ class IndexController extends Controller {
             ]
         ]);
         //flash message
-        $request->session()->flash('status', 'The location"'.$title.'" was successfully deleted');
+        $request->session()->flash('status', 'The location"' . $title . '" was successfully locations');
         //return result body
         return $result->getBody();
     }
@@ -135,7 +142,7 @@ class IndexController extends Controller {
             ]
         ]);
         //flash message
-        $request->session()->flash('status', 'The Item "'.$name.'" was successfully created');
+        $request->session()->flash('status', 'The Item "' . $name . '" was successfully created');
         //return result body
         return $result->getBody();
     }
@@ -179,17 +186,16 @@ class IndexController extends Controller {
         //return result body
         return $result->getBody();
     }
-    
-    public function deleteItem(Request $request,$slug)
-    {
+
+    public function deleteItem(Request $request, $slug) {
         //create new client and delete item
         $client = new Client();
-        $result = $client->delete('https://api.cosmicjs.com/v1/'. $this->bucket_slug .'/'.$slug, [
+        $result = $client->delete('https://api.cosmicjs.com/v1/' . $this->bucket_slug . '/' . $slug, [
             'headers' => [
                 'Content-type' => 'application/json',
             ]
         ]);
-        
+
         //flash message
         $request->session()->flash('status', 'The Item was successfully deleted!');
         return $result;
