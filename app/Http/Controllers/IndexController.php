@@ -151,6 +151,13 @@ class IndexController extends Controller {
         $location_meta['type'] = "object";
         $location_meta['value'] = $location_id;
         $metafields = array();
+        //set picture if passed into request
+        if ($request->input('image')) {
+            $picture_data['key'] = "picture";
+            $picture_data['type'] = 'file';
+            $picture_data['value'] = $request->input('image');
+            array_push($metafields, $picture_data);
+        }
         array_push($metafields, $count_meta);
         array_push($metafields, $location_meta);
         $data['metafields'] = $metafields;
@@ -164,6 +171,18 @@ class IndexController extends Controller {
         ]);
         //return result body
         return $result->getBody();
+    }
+    
+    public function deleteItem($slug)
+    {
+        $client = new Client();
+        $result = $client->delete('https://api.cosmicjs.com/v1/'. $this->bucket_slug .'/'.$slug, [
+            'headers' => [
+                'Content-type' => 'application/json',
+            ]
+        ]);
+        
+        return $result;
     }
 
 }

@@ -83,7 +83,7 @@
                         <div class="panel-heading">{{ selected_location.title }}</div>
                         <div class="panel-body">
                             <ul class="list-group">
-                                <button type="button" class="list-group-item text-primary location-tab" :class="{disabled: isDisabled}" v-for="item in items"><img v-if="item.metadata.hasOwnProperty('picture')" :src="item.metadata.picture.url">{{ item.title }} - {{ item.metadata.count }} <span class="glyphicon glyphicon-pencil pull-right" aria-hidden="true" v-on:click.prevent="openEdit(item)"></span></button>
+                                <button type="button" class="list-group-item text-primary location-tab" :class="{disabled: isDisabled}" v-for="item in items"><img v-if="item.metadata.hasOwnProperty('picture')" :src="item.metadata.picture.url">{{ item.title }} - {{ item.metadata.count }} <div class="pull-right"><span class="glyphicon glyphicon-pencil" aria-hidden="true" v-on:click.prevent="openEdit(item)"></span><span class="glyphicon glyphicon-trash" aria-hidden="true" v-on:click.prevent="deleteItem(item)" style="padding: 0 5px;"></span></div></button>
                             </ul>
                         </div>
                     </div>
@@ -103,13 +103,13 @@
             {
                 this.unselected = false;
                 //find location with slug
-                var item = this.locations.filter(function(obj)
+                var item = this.locations.filter(function (obj)
                 {
                     console.log(obj.slug);
                     return obj.slug === self.locationSlug;
                 });
-                
-                this.selected_location =  item[0];
+
+                this.selected_location = item[0];
                 this.fetchItems(this.selected_location);
             }
         },
@@ -227,11 +227,32 @@
                 var data = new FormData(form);
                 this.isDisabled = true;
                 data.append('slug', this.selected_item.slug);
+                if(this.selected_item.metadata.hasOwnProperty('picture')){
+                    data.append('image',this.selected_item.metafields[0].value);
+                }
+                
                 data.append('location_id', this.selected_location._id);
                 axios.post('items/edit', data).then(response => {
                     //refresh page BUT pass location_slug, which then makes the app load into the passed location
                     window.location.href = "./" + self.selected_location.slug;
                 });
+            },
+            deleteItem(item)
+            {
+                var self = this;
+                swal({
+                    title: 'Are you sure?',
+                    text: 'You will not be able to recover this item!',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Nope, still need it'
+                }).then(function(){
+                    axios.get('item/' + item.slug + '/delete').then(response => {
+                    window.location.href = "./" + self.selected_location.slug;
+                });
+                })
+                
             }
 
         }

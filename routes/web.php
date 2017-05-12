@@ -17,3 +17,4 @@ Route::get('items/{slug}', 'IndexController@itemsByLocation');
 Route::post('locations/new','IndexController@newLocation');
 Route::post('items/new','IndexController@newItem');
 Route::post('items/edit','IndexController@editItem');
+Route::get('item/{slug}/delete','IndexController@deleteItem');

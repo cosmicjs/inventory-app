@@ -1943,10 +1943,29 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             var data = new FormData(form);
             this.isDisabled = true;
             data.append('slug', this.selected_item.slug);
+            if (this.selected_item.metadata.hasOwnProperty('picture')) {
+                data.append('image', this.selected_item.metafields[0].value);
+            }
+
             data.append('location_id', this.selected_location._id);
             axios.post('items/edit', data).then(function (response) {
                 //refresh page BUT pass location_slug, which then makes the app load into the passed location
                 window.location.href = "./" + self.selected_location.slug;
+            });
+        },
+        deleteItem: function deleteItem(item) {
+            var self = this;
+            swal({
+                title: 'Are you sure?',
+                text: 'You will not be able to recover this item!',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Nope, still need it'
+            }).then(function () {
+                axios.get('item/' + item.slug + '/delete').then(function (response) {
+                    window.location.href = "./" + self.selected_location.slug;
+                });
             });
         }
     }
@@ -34679,8 +34698,10 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       attrs: {
         "src": item.metadata.picture.url
       }
-    }) : _vm._e(), _vm._v(_vm._s(item.title) + " - " + _vm._s(item.metadata.count) + " "), _c('span', {
-      staticClass: "glyphicon glyphicon-pencil pull-right",
+    }) : _vm._e(), _vm._v(_vm._s(item.title) + " - " + _vm._s(item.metadata.count) + " "), _c('div', {
+      staticClass: "pull-right"
+    }, [_c('span', {
+      staticClass: "glyphicon glyphicon-pencil",
       attrs: {
         "aria-hidden": "true"
       },
@@ -34690,7 +34711,21 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
           _vm.openEdit(item)
         }
       }
-    })])
+    }), _c('span', {
+      staticClass: "glyphicon glyphicon-trash",
+      staticStyle: {
+        "padding": "0 5px"
+      },
+      attrs: {
+        "aria-hidden": "true"
+      },
+      on: {
+        "click": function($event) {
+          $event.preventDefault();
+          _vm.deleteItem(item)
+        }
+      }
+    })])])
   }))])])])])])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
   return _c('div', {
