@@ -20,7 +20,7 @@
 
 <div class="row" style="font-size: 16px">
     <!-- Display vue component and set props from given data  -->
-    <inventory :initial-locations="{{ json_encode($locations) }}" slug="{{ $bucket_slug }}" location-slug="{{ $location_slug }}"></inventory>
+    <inventory message="{{Session::get('status')}}" :initial-locations="{{ json_encode($locations) }}" slug="{{ $bucket_slug }}" location-slug="{{ $location_slug }}"></inventory>
 </div>
 @endsection
 

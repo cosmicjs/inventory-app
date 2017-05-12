@@ -30,7 +30,7 @@ class IndexController extends Controller {
         //set locations and bucket_slug variable to be passed to view
         $data['locations'] = $locations->objects;
         $data['bucket_slug'] = $this->bucket_slug;
-
+        
         //if location slug was passed in url, pass it to view as well
         if ($location) {
             $data['location_slug'] = $location;
@@ -88,6 +88,8 @@ class IndexController extends Controller {
                 'Content-type' => 'application/json',
             ]
         ]);
+        //flash message
+        $request->session()->flash('status', 'The location"'.$title.'" was successfully deleted');
         //return result body
         return $result->getBody();
     }
@@ -131,6 +133,8 @@ class IndexController extends Controller {
                 'Content-type' => 'application/json',
             ]
         ]);
+        //flash message
+        $request->session()->flash('status', 'The Item "'.$name.'" was successfully created');
         //return result body
         return $result->getBody();
     }
@@ -169,12 +173,15 @@ class IndexController extends Controller {
                 'Content-type' => 'application/json',
             ]
         ]);
+        //flash message
+        $request->session()->flash('status', 'The Item was successfully edited!');
         //return result body
         return $result->getBody();
     }
     
-    public function deleteItem($slug)
+    public function deleteItem(Request $request,$slug)
     {
+        //create new client and delete item
         $client = new Client();
         $result = $client->delete('https://api.cosmicjs.com/v1/'. $this->bucket_slug .'/'.$slug, [
             'headers' => [
@@ -182,6 +189,8 @@ class IndexController extends Controller {
             ]
         ]);
         
+        //flash message
+        $request->session()->flash('status', 'The Item was successfully deleted!');
         return $result;
     }
 

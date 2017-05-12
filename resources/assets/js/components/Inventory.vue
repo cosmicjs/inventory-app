@@ -49,7 +49,7 @@
                                     <label for="image">Image</label>
                                     <input type="file" class="form-control media" name="media"/>
                                 </div>
-                                <button type="submit" class="btn btn-primary" v-on:click.prevent="addItem">Submit</button>
+                                <button type="submit" class="btn btn-primary" :class="{disabled: isDisabled}" v-on:click.prevent="addItem">Submit</button>
                             </form>
                         </div>
                     </div>
@@ -70,7 +70,7 @@
                                     <label for="count">Count</label>
                                     <input type="number" class="form-control" name="count" :value="selected_item.metadata.count">
                                 </div>
-                                <button type="submit" class="btn btn-primary" v-on:click.prevent="editItem">Submit</button>
+                                <button type="submit" class="btn btn-primary" :class="{disabled: isDisabled}" v-on:click.prevent="editItem">Submit</button>
                             </form>
                         </div>
                     </div>
@@ -99,13 +99,16 @@
         mounted() {
             var self = this;
             //If location slug was passed show items for that location
+            if(this.message)
+            {
+                swal(this.message);
+            }
             if (this.locationSlug)
             {
                 this.unselected = false;
                 //find location with slug
                 var item = this.locations.filter(function (obj)
                 {
-                    console.log(obj.slug);
                     return obj.slug === self.locationSlug;
                 });
 
@@ -113,7 +116,7 @@
                 this.fetchItems(this.selected_location);
             }
         },
-        props: ['initial-locations', 'slug', 'location-slug'],
+        props: ['initial-locations', 'slug', 'location-slug','message'],
         data: function () {
             return {
                 edit_item: false,

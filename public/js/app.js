@@ -1826,11 +1826,13 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     mounted: function mounted() {
         var self = this;
         //If location slug was passed show items for that location
+        if (this.message) {
+            swal(this.message);
+        }
         if (this.locationSlug) {
             this.unselected = false;
             //find location with slug
             var item = this.locations.filter(function (obj) {
-                console.log(obj.slug);
                 return obj.slug === self.locationSlug;
             });
 
@@ -1839,7 +1841,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         }
     },
 
-    props: ['initial-locations', 'slug', 'location-slug'],
+    props: ['initial-locations', 'slug', 'location-slug', 'message'],
     data: function data() {
         return {
             edit_item: false,
@@ -34581,6 +34583,9 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   })]), _vm._v(" "), _c('button', {
     staticClass: "btn btn-primary",
+    class: {
+      disabled: _vm.isDisabled
+    },
     attrs: {
       "type": "submit"
     },
@@ -34644,6 +34649,9 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   })]), _vm._v(" "), _c('button', {
     staticClass: "btn btn-primary",
+    class: {
+      disabled: _vm.isDisabled
+    },
     attrs: {
       "type": "submit"
     },
