@@ -104,29 +104,40 @@ use GuzzleHttp\Client;
 class IndexController extends Controller {
 
     private $locations_cosmic;
-	private $items_cosmic;
-    private $bucket_slug = 'inventory';
+    private $items_cosmic;
+    private $bucket_slug = '';
+    private $read_key = '';
+    private $write_key = '';
 
     public function __construct() {
-      //initialize cosmicjs php instance for fetching all locations
+        //initialize cosmicjs php instance for fetching all locations
+        $this->bucket_slug = config('cosmic.slug');
+        $this->read_key = config('cosmic.read');
+        $this->write_key = config('cosmic.write');
         $this->locations_cosmic = new CosmicJS($this->bucket_slug, 'locations');
-		$this->items_cosmic = new CosmicJS($this->bucket_slug, 'items');
+        $this->items_cosmic = new CosmicJS($this->bucket_slug, 'items', $this->read_key, $this->write_key);
     }
 
     public function index($location = null) {
+
         //get objects with cosmic-js php
-        $locations = $this->locations_cosmic->getObjectsType("locations", "disney-land");
-       
-       //set locations and bucket_slug variable to be passed to view
-        $data['locations'] = $locations->objects;
-        $data['bucket_slug'] = $this->bucket_slug;
-        
-        //if location slug was passed in url, pass it to view as well
-        if($location)
-        {
-            $data['location_slug'] = $location;
+        $locations = $this->locations_cosmic->getObjectsType();
+
+        //set locations and bucket_slug variable to be passed to view
+        if (property_exists($locations, 'objects')) {
+            $data['locations'] = $locations->objects;
         }
-        else{
+        else
+        {
+            $data['locations'] = [];
+        }
+
+        $data['bucket_slug'] = $this->bucket_slug;
+
+        //if location slug was passed in url, pass it to view as well
+        if ($location) {
+            $data['location_slug'] = $location;
+        } else {
             $data['location_slug'] = '';
         }
 
@@ -138,7 +149,7 @@ class IndexController extends Controller {
     public function itemsByLocation($slug) {
         //fetch items using the cosmicjs library's custom function
         $items = $this->items_cosmic->getByObjectSlug('location', $slug);
-        
+
         //if the returned value has "object" property, pass it 
         if (property_exists($items, 'objects')) {
             //returning arrays in laravel automatically converts it to json string
@@ -180,10 +191,12 @@ class IndexController extends Controller {
                 'Content-type' => 'application/json',
             ]
         ]);
+        //flash message
+        $request->session()->flash('status', 'The location"' . $title . '" was successfully locations');
         //return result body
-	return $result->getBody();
+        return $result->getBody();
     }
-    
+
     //create a new item
     public function newItem(Request $request) {
         //get data
@@ -204,7 +217,7 @@ class IndexController extends Controller {
         $location_meta['type'] = "object";
         $location_meta['value'] = $location_id;
         $metafields = array();
-        
+
         //set picture if passed into request
         if ($picture != '') {
             $picture_data['key'] = "picture";
@@ -223,8 +236,10 @@ class IndexController extends Controller {
                 'Content-type' => 'application/json',
             ]
         ]);
+        //flash message
+        $request->session()->flash('status', 'The Item "' . $name . '" was successfully created');
         //return result body
-	return $result->getBody();
+        return $result->getBody();
     }
 
     public function editItem(Request $request) {
@@ -243,6 +258,13 @@ class IndexController extends Controller {
         $location_meta['type'] = "object";
         $location_meta['value'] = $location_id;
         $metafields = array();
+        //set picture if passed into request
+        if ($request->input('image')) {
+            $picture_data['key'] = "picture";
+            $picture_data['type'] = 'file';
+            $picture_data['value'] = $request->input('image');
+            array_push($metafields, $picture_data);
+        }
         array_push($metafields, $count_meta);
         array_push($metafields, $location_meta);
         $data['metafields'] = $metafields;
@@ -254,11 +276,28 @@ class IndexController extends Controller {
                 'Content-type' => 'application/json',
             ]
         ]);
+        //flash message
+        $request->session()->flash('status', 'The Item was successfully edited!');
         //return result body
-	return $result->getBody();
+        return $result->getBody();
+    }
+
+    public function deleteItem(Request $request, $slug) {
+        //create new client and delete item
+        $client = new Client();
+        $result = $client->delete('https://api.cosmicjs.com/v1/' . $this->bucket_slug . '/' . $slug, [
+            'headers' => [
+                'Content-type' => 'application/json',
+            ]
+        ]);
+
+        //flash message
+        $request->session()->flash('status', 'The Item was successfully deleted!');
+        return $result;
     }
 
 }
+
 ```
 The code above is preety self explanatory with the comments included
 ### Things to note:
@@ -290,6 +329,7 @@ Remember this code in our IndexController `return view('index', $data);`? well i
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Load Bootstrap-->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.6.2/sweetalert2.css" rel="stylesheet" type="text/css">
         <title>Inventory Manger</title>
 
         <!-- Fonts -->
@@ -299,11 +339,11 @@ Remember this code in our IndexController `return view('index', $data);`? well i
 
         <!-- Set Csrf token to be used by javascript and axios-->
         <script>
-	window.Laravel = <?php
-	echo json_encode([
-    	'csrfToken' => csrf_token(),
-	]);
-	?>
+window.Laravel = <?php
+echo json_encode([
+    'csrfToken' => csrf_token(),
+]);
+?>
         </script>
         <!-- Styles -->
         <style>
@@ -349,13 +389,15 @@ Remember this code in our IndexController `return view('index', $data);`? well i
                 @yield('content')
             </div>
         </div>
-        <!-- Load Jquery, bootstrap js, and app.js which contains all our compiled frontend javascript-->
+        <!-- Load Jquery and bootstrap js-->
         <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.6.2/sweetalert2.min.js"></script>
         <script src="{{ asset('/js/app.js')}}"></script>
         @yield('scripts')
     </body>
 </html>
+
 ```
 THe master.blade.php will serve as an extendable layout which we can then use as parent layouts for all our other views. Now create an index.blade.php file in the same folder and paste this into it.
 ```
@@ -381,7 +423,7 @@ THe master.blade.php will serve as an extendable layout which we can then use as
 
 <div class="row" style="font-size: 16px">
     <!-- Display vue component and set props from given data  -->
-    <inventory :initial-locations="{{ json_encode($locations) }}" slug="{{ $bucket_slug }}" location-slug="{{ $location_slug }}"></inventory>
+    <inventory message="{{Session::get('status')}}" :initial-locations="{{ json_encode($locations) }}" slug="{{ $bucket_slug }}" location-slug="{{ $location_slug }}"></inventory>
 </div>
 @endsection
 
@@ -457,7 +499,7 @@ Here we are replacing the default example component with a component called `inv
                                     <label for="image">Image</label>
                                     <input type="file" class="form-control media" name="media"/>
                                 </div>
-                                <button type="submit" class="btn btn-primary" v-on:click.prevent="addItem">Submit</button>
+                                <button type="submit" class="btn btn-primary" :class="{disabled: isDisabled}" v-on:click.prevent="addItem">Submit</button>
                             </form>
                         </div>
                     </div>
@@ -478,7 +520,7 @@ Here we are replacing the default example component with a component called `inv
                                     <label for="count">Count</label>
                                     <input type="number" class="form-control" name="count" :value="selected_item.metadata.count">
                                 </div>
-                                <button type="submit" class="btn btn-primary" v-on:click.prevent="editItem">Submit</button>
+                                <button type="submit" class="btn btn-primary" :class="{disabled: isDisabled}" v-on:click.prevent="editItem">Submit</button>
                             </form>
                         </div>
                     </div>
@@ -491,7 +533,7 @@ Here we are replacing the default example component with a component called `inv
                         <div class="panel-heading">{{ selected_location.title }}</div>
                         <div class="panel-body">
                             <ul class="list-group">
-                                <button type="button" class="list-group-item text-primary location-tab" :class="{disabled: isDisabled}" v-for="item in items"><img v-if="item.metadata.hasOwnProperty('picture')" :src="item.metadata.picture.url">{{ item.title }} - {{ item.metadata.count }} <span class="glyphicon glyphicon-pencil pull-right" aria-hidden="true" v-on:click.prevent="openEdit(item)"></span></button>
+                                <button type="button" class="list-group-item text-primary location-tab" :class="{disabled: isDisabled}" v-for="item in items"><img v-if="item.metadata.hasOwnProperty('picture')" :src="item.metadata.picture.url">{{ item.title }} - {{ item.metadata.count }} <div class="pull-right"><span class="glyphicon glyphicon-pencil" aria-hidden="true" v-on:click.prevent="openEdit(item)"></span><span class="glyphicon glyphicon-trash" aria-hidden="true" v-on:click.prevent="deleteItem(item)" style="padding: 0 5px;"></span></div></button>
                             </ul>
                         </div>
                     </div>
@@ -507,21 +549,24 @@ Here we are replacing the default example component with a component called `inv
         mounted() {
             var self = this;
             //If location slug was passed show items for that location
+            if(this.message)
+            {
+                swal(this.message);
+            }
             if (this.locationSlug)
             {
                 this.unselected = false;
                 //find location with slug
-                var item = this.locations.filter(function(obj)
+                var item = this.locations.filter(function (obj)
                 {
-                    console.log(obj.slug);
                     return obj.slug === self.locationSlug;
                 });
-                
-                this.selected_location =  item[0];
+
+                this.selected_location = item[0];
                 this.fetchItems(this.selected_location);
             }
         },
-        props: ['initial-locations', 'slug', 'location-slug'],
+        props: ['initial-locations', 'slug', 'location-slug','message'],
         data: function () {
             return {
                 edit_item: false,
@@ -635,11 +680,32 @@ Here we are replacing the default example component with a component called `inv
                 var data = new FormData(form);
                 this.isDisabled = true;
                 data.append('slug', this.selected_item.slug);
+                if(this.selected_item.metadata.hasOwnProperty('picture')){
+                    data.append('image',this.selected_item.metafields[0].value);
+                }
+                
                 data.append('location_id', this.selected_location._id);
                 axios.post('items/edit', data).then(response => {
                     //refresh page BUT pass location_slug, which then makes the app load into the passed location
                     window.location.href = "./" + self.selected_location.slug;
                 });
+            },
+            deleteItem(item)
+            {
+                var self = this;
+                swal({
+                    title: 'Are you sure?',
+                    text: 'You will not be able to recover this item!',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Nope, still need it'
+                }).then(function(){
+                    axios.get('item/' + item.slug + '/delete').then(response => {
+                    window.location.href = "./" + self.selected_location.slug;
+                });
+                })
+                
             }
 
         }
@@ -658,6 +724,72 @@ A lot is going on in our vue components as that is where majority of the fronten
 ## Note
 1. Make sure the assets were successfully compiled after the changes were made, and if you want to manually compile it simply run `npm run production` to compile into productin mode.
 2. We create a self variable and set it to `this` at the start of most functions because, if we use this in some nested function calls, we begin to loose context for the `this` variable. More info can be found on this stack overflow [post](http://stackoverflow.com/documentation/vue.js/9350/using-this-in-vue#t=201705092314332093921)
+
+## Setting the bucket slug
+Now we want to set our bucket slug. We want to be able to set it by running an artisan comman so run `php artisan make:command SetSlug`. Now navigate to app/console/Commands/SetSlug and copy and paste this into it:
+```
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+
+class SetSlug extends Command {
+
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'bucket {slug} {read?} {write?}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Set the bucket slug';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    protected $files;
+    protected $read;
+    protected $write;
+
+    public function __construct(\Illuminate\Filesystem\Filesystem $files) {
+        parent::__construct();
+        $this->files = $files;
+        
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle() {
+        $this->read = $this->argument('slug');
+        $this->write = $this->argument('slug');
+        $config_path = base_path() . "/config/cosmic.php";
+        $content = "<?php\n\treturn [\n\t\t'slug' => '" . $this->argument('slug') . "',\n\t\t"
+                . "'read' => '" . $this->argument('read')."',\n\t\t"
+                ."'write' => '" . $this->argument('write')."',\n\t];";
+        $this->files->put($config_path, $content);
+        echo "Bucket variables set";
+    }
+
+}
+```
+What we are doing is opening/creating a configuration file at config/cosmic.php and saving our variables from the command, now the bucket slug can be set with `php artisan bucket bucket_slug read_key write_key`. Now register it in your app/console/kernel.php on the commands section with 
+```
+protected $commands = [
+        Commands\SetSlug::class
+    ];
+```
+
 
 # Conclusion
 We were able to create and update items using vue, the cosmic Js php library, a bit of guzzle, and a lot of axios. You can feel free to tinker with the code and make your own modifications, a way to delete items, move to new locations, you name it, remember we only scratched the surface of the amazing use of cosmicjs with laravel. So go on and create something amazing
