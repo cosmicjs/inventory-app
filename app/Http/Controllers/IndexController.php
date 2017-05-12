@@ -24,7 +24,7 @@ class IndexController extends Controller {
     }
 
     public function index($location = null) {
-        return $bucket_slug;
+        return $this->bucket_slug;
         //get objects with cosmic-js php
         $locations = $this->locations_cosmic->getObjectsType("locations", "disney-land");
 
