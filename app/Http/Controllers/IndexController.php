@@ -97,7 +97,7 @@ class IndexController extends Controller {
             ]
         ]);
         //flash message
-        $request->session()->flash('status', 'The location"' . $title . '" was successfully locations');
+        $request->session()->flash('status', 'The location"' . $title . '" was successfully created');
         //return result body
         return $result->getBody();
     }
