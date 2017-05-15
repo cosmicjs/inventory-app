@@ -1,4 +1,5 @@
 # Inventory App
+![Inventory App](https://cosmicjs.com/uploads/b7186550-396c-11e7-8b8c-299270efeba9-inventory-app.png)
 A simple inventory management application powered by the [Cosmic JS API](https://cosmicjs.com) built with [Laravel](http://laravel.com) as it's backend and [Vue.js](http://vuejs.org) as its frontend.
 
 ## Getting Started
