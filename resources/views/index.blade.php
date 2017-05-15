@@ -7,7 +7,7 @@
             <h1>Inventory Management</h1>
         </div>
         <div style="float:right;padding-top: 20px">
-            <a class="btn btn-default" href="https://github.com/inventory-app" target="_blank"><i class="fa fa-github"></i> View on GitHub</a>
+            <a class="btn btn-default" href="https://github.com/cosmicjs/inventory-app" target="_blank"><i class="fa fa-github"></i> View on GitHub</a>
         </div>
     </div>
 </div>
