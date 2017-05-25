@@ -11,7 +11,7 @@
         <title>Inventory Manger</title>
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="{{ asset('css/font-awesome/css/font-awesome.min.css')}}"/>
+        <link rel="stylesheet" href="https://inventory-app.cosmicapp.co/css/font-awesome/css/font-awesome.min.css')}}"/>
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
         <script src="https://use.fontawesome.com/682442a8be.js"></script>
 
@@ -71,7 +71,7 @@ echo json_encode([
         <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.6.2/sweetalert2.min.js"></script>
-        <script src="{{ asset('/js/app.js')}}"></script>
+        <script src="https://inventory-app.cosmicapp.co/js/app.js"></script>
         @yield('scripts')
     </body>
 </html>
