@@ -1,5 +1,8 @@
 # Inventory App
+![Inventory App](https://cosmicjs.com/uploads/3ecb9f80-396d-11e7-8b8c-299270efeba9-inventory-app.png)
 A simple inventory management application powered by the [Cosmic JS API](https://cosmicjs.com) built with [Laravel](http://laravel.com) as it's backend and [Vue.js](http://vuejs.org) as its frontend.
+
+### [View Demo](http://inventory-app.cosmicapp.co)
 
 ## Getting Started
 To install the php dependencies you will need to have composer installed.  If you do not have composer installed, you can follow steps to do so here: https://getcomposer.org/download/
